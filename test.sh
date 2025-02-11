@@ -2,7 +2,7 @@
 echo "SCRIPT AUTO INSTALL WINDOWS by HIDESSH"
 echo
 echo "Pilih OS yang ingin anda install"
-echo "[1] Windows 2019 (Default)"
+echo "[1] Windows 2019(Default)"
 echo "[2] Windows 2016"
 echo "[3] Windows 2012"
 echo "[4] Windows 10"
@@ -11,19 +11,13 @@ echo "[5] Masukkan Link GZ manual"
 read -p "Pilih [1]: " PILIHOS
 
 case "$PILIHOS" in
-    1|"") PILIHOS="https://file.nixpoin.com/windows2019DO.gz" ;;
-    2) PILIHOS="https://file.nixpoin.com/windows2016.gz" ;;
-    3) PILIHOS="https://archive.org/download/windows4vpsisorecoverrrq11/windows12.gz" ;;
-    4) PILIHOS="https://file.nixpoin.com/win10.gz" ;;
-    5) read -p "[?] Masukkan Link GZ Anda: " PILIHOS ;;
-    *) echo "[!] Pilihan salah"; exit 1 ;;
+    1|"") PILIHOS="https://file.nixpoin.com/windows2019DO.gz";;
+    2) PILIHOS="https://file.nixpoin.com/windows2016.gz";;
+    3) PILIHOS="http://52.221.195.212/w12.gz";;
+    4) PILIHOS="https://file.nixpoin.com/win10.gz";;
+    5) read -p "[?] Masukkan Link GZ mu: " PILIHOS;;
+    *) echo "[!] Pilihan salah"; exit 1;;
 esac
-
-echo "[*] Gunakan password yang kuat untuk keamanan akun Administrator RDP!"
-read -p "[?] Masukkan password untuk akun Administrator (min 12 karakter): " PASSADMIN
-
-IP4=$(curl -4 -s icanhazip.com)
-GW=$(ip route | awk '/default/ { print $3 }')
 
 cat >/tmp/net.bat <<EOF
 @ECHO OFF
@@ -50,14 +44,33 @@ del /f /q "%SystemDrive%\diskpart.extend"
 exit
 EOF
 
-wget --no-check-certificate -O- "$PILIHOS" | gunzip | dd of=/dev/vda bs=3M status=progress
 
+echo "[*] Mengunduh file Windows..."
+wget --no-check-certificate -O /tmp/windows.gz "$PILIHOS"
+if [ $? -ne 0 ]; then
+    echo "[!] Gagal mengunduh file!"
+    exit 1
+fi
+
+echo "[*] Mengekstrak file Windows..."
+gunzip /tmp/windows.gz
+if [ $? -ne 0 ]; then
+    echo "[!] Gagal mengekstrak file!"
+    exit 1
+fi
+
+echo "[*] Menulis image ke disk..."
+dd if=/tmp/windows of=/dev/vda bs=3M status=progress
+if [ $? -ne 0 ]; then
+    echo "[!] Gagal menulis ke disk!"
+    exit 1
+fi
+
+echo "[*] Mounting Windows partition..."
 mount.ntfs-3g /dev/vda2 /mnt || echo "[!] Gagal mount /dev/vda2"
 
-cd "/mnt/ProgramData/Microsoft/Windows/Start Menu/Programs/"
-wget https://nixpoin.com/ChromeSetup.exe
+cd "/mnt/ProgramData/Microsoft/Windows/Start Menu/Programs/" || exit
 cp -f /tmp/net.bat net.bat
 cp -f /tmp/dpart.bat dpart.bat
 
-echo "[*] Instalasi selesai. Reboot server untuk menerapkan perubahan."
- 
+echo "[*] Instalasi selesai, reboot VPS untuk memulai Windows."
