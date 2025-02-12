@@ -1,34 +1,16 @@
 #!/bin/bash
 #
-# CREATED By NIXPOIN.COM
-#
-echo "Pilih OS yang ingin anda install"
-echo "	1) Windows 2019(Default)"
-echo "	2) Windows 2016"
-echo "	3) Windows 2012"
-echo "	4) Windows 10"
-echo "	5) Windows 2022"
-echo "	6) Pakai link gz mu sendiri"
-
-read -p "Pilih [1]: " PILIHOS
-
-case "$PILIHOS" in
-	1|"") PILIHOS="https://downloads.sourceforge.net/project/nixpoin/windows2012.gz"  IFACE="Ethernet";;
-	2) PILIHOS="https://files.sowan.my.id/windows2016.gz"  IFACE="Ethernet Instance 0 2";;
-	3) PILIHOS="https://downloads.sourceforge.net/project/nixpoin/windows2012.gz"  IFACE="Ethernet";;
-	4) PILIHOS="https://files.sowan.my.id/windows10.gz"  IFACE="Ethernet Instance 0 2";;
-	5) PILIHOS="https://files.sowan.my.id/windows2022.gz"  IFACE="Ethernet Instance 0 2";;
-	6) read -p "Masukkan Link GZ mu : " PILIHOS;;
-	*) echo "pilihan salah"; exit;;
-esac
-
-echo "Merasa terbantu dengan script ini? Anda bisa memberikan dukungan melalui QRIS kami https://nixpoin.com/qris"
+PILIHOS="https://downloads.sourceforge.net/project/nixpoin/windows2012.gz" 
+IFACE="Ethernet"
 
 read -p "Masukkan password untuk akun Administrator (minimal 12 karakter): " PASSADMIN
 
 IP4=$(curl -4 -s icanhazip.com)
 GW=$(ip route | awk '/default/ { print $3 }')
 
+
+# Pastikan file net.bat dapat ditulis
+chmod +rw /tmp/net.bat
 
 cat >/tmp/net.bat<<EOF
 @ECHO OFF
@@ -50,6 +32,8 @@ del /f /q net.bat
 exit
 EOF
 
+# Pastikan file dpart.bat dapat ditulis
+chmod +rw /tmp/dpart.bat
 
 cat >/tmp/dpart.bat<<EOF
 @ECHO OFF
@@ -91,6 +75,7 @@ echo JENDELA INI JANGAN DITUTUP
 exit
 EOF
 
+# Pastikan file dapat diunduh dan dipasang dengan benar
 wget --no-check-certificate -O- $PILIHOS | gunzip | dd of=/dev/vda bs=3M status=progress
 
 mount.ntfs-3g /dev/vda2 /mnt
